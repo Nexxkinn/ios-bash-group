@@ -2,24 +2,16 @@
 
 cd "$(dirname "$0")"
 # make folder if not exists
-mkdir -p Camera
-mkdir -p Videos
-mkdir -p Downloaded
-mkdir -p Downloaded-Videos
+mkdir -p {Camera,Videos,Downloaded,Downloaded-Videos}
 # organise it
 
-shopt -s nullglob
 files=($(ls -p | grep -vE "/|.sh"))
-shopt -u nullglob
 
-i=1
 flen=${#files[@]}
-for file in "${files[@]}"
+for (( i=0; i<$flen; i++ ))
 do
-    printf "($i/$flen) $file \r"
-
-    device=$(exif $file -t 0xa433 -m 2> /dev/null)
-
+    file=${files[$i]}
+    echo -ne "($((i+1))/$flen) $file \033[0K\r"
     # check if file is a video
     if [[ ${file^^} =~ .MOV|.MP4 ]]
     then
@@ -30,14 +22,12 @@ do
         else
             mv $file Downloaded-Videos/
         fi
-    elif [ "$device" = "Apple" ]
+    elif [ "$(exif $file -t 0xa433 -m 2> /dev/null)" = "Apple" ]
     then
         mv $file Camera/
     else
         mv $file Downloaded/
     fi
-    ((i+=1))
 done
 
-printf "\n"
-
+echo -ne "\n"
